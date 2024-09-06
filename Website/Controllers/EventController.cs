@@ -23,7 +23,8 @@ namespace Website.Controllers
         public async Task<ActionResult> Index([FromQuery] bool showHistoricEvents = false, CancellationToken cancellationToken = default)
         {
             var events = await _dbContext.Events.GetAllAsync(showHistoricEvents, cancellationToken);
-            return View(new EventListViewModel { IsShowingHistoricEvents = showHistoricEvents, Events = events });
+            var eventEmployeeCounts = await _dbContext.EmployeeEvent.GetEmployeesAtEventCountAsync(events.Select(@event => @event.Id), cancellationToken);
+            return View(new EventListViewModel { IsShowingHistoricEvents = showHistoricEvents, Events = events, EventEmployeeCounts = eventEmployeeCounts });
         }
 
         // GET: Event/Details/5
@@ -34,7 +35,8 @@ namespace Website.Controllers
                 return NotFound();
 
             var @event = await _dbContext.Events.GetByIdAsync(id, cancellationToken);
-            return View(@event);
+            var employees = await _dbContext.EmployeeEvent.GetEmployeesAtEventAsync(id, cancellationToken);
+            return View(new EventDetailsViewModel { Event = @event, Employees = employees });
         }
 
         // GET: Event/Create
