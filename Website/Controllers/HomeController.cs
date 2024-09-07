@@ -20,8 +20,9 @@ public class HomeController : Controller
     {
         var events = await _dbContext.Events.GetAllAsync(includeHistoricEvents: false, cancellationToken);
         var upcomingEvents = events.Where(@event => @event.StartDateTime >= DateTime.Now && @event.StartDateTime <= DateTime.Now.AddDays(7));
+        var employeesWithEventCount = await _dbContext.Employees.GetTopEmployeesByEventsAttendedAsync(5, cancellationToken);
 
-        return View(upcomingEvents);
+        return View(new HomeViewModel { UpcomingEvents = upcomingEvents, EmployeesWithEventCount = employeesWithEventCount });
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

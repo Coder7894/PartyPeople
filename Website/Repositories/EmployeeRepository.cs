@@ -232,4 +232,44 @@ public class EmployeeRepository : RepositoryBase
 
         await Connection.ExecuteAsync(command);
     }
+
+    /// <summary>
+    /// Gets the employees with the most events attended.
+    /// </summary>
+    /// <param name="limit">The number of employees to get.</param>
+    /// <param name="cancellationToken">A token which can be used to cancel asynchronous operations.</param>
+    /// <returns>An awaitable task whose result is the employees found.</returns>
+    public async Task<IReadOnlyCollection<(Employee, long)>> GetTopEmployeesByEventsAttendedAsync(int limit, CancellationToken cancellationToken = default)
+    {
+        var command = new CommandDefinition(
+            @"
+                SELECT   [E].[Id],
+		                 [E].[FirstName],
+		                 [E].[LastName],
+		                 [E].[DateOfBirth],
+		                 [E].[FavouriteDrink],
+		                 COUNT([EE].[EventId]) AS [EventsAttended]
+                FROM     [Employee] as [E]
+                JOIN     [EmployeeEvent] AS [EE]
+                ON       [E].[Id] = [EE].[EmployeeId]
+                GROUP BY [E].[Id]
+                ORDER BY [EventsAttended] DESC
+                LIMIT    @Limit;
+            ",
+            parameters: new
+            {
+                Limit = limit
+            },
+            commandType: CommandType.Text,
+            cancellationToken: cancellationToken);
+
+        var employeesWithEventCount = await Connection.QueryAsync<Employee, long, (Employee, long)>(
+            command,
+            (employee, eventsAttended) => (employee, eventsAttended),
+            splitOn: "EventsAttended"
+        );
+
+        return employeesWithEventCount
+            .ToList();
+    }
 }
