@@ -4,6 +4,6 @@ namespace Website.Models;
 
 public class EventDetailsViewModel
 {
-    public Event Event { get; init; }
-    public IReadOnlyCollection<Employee> Employees { get; init; }
+    public required Event Event { get; init; }
+    public required IReadOnlyCollection<Employee> Employees { get; init; }
 }

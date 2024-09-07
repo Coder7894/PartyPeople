@@ -35,7 +35,7 @@
                     <td>@eventDetails.Description</td>
                     <td>@eventDetails.StartDateTime.ToString("dd/MM/yyyy HH:mm")</td>
                     <td>@eventDetails.EndDateTime.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>@Model.EventEmployeeCounts[eventDetails.Id]</td>
+                    <td>@Model.EventEmployeeCounts.GetValueOrDefault(eventDetails.Id, 0)</td>
                     <td class="text-end py-1">
                         <a class="btn btn-outline-primary btn-sm" role="button" asp-controller="Event" asp-action="Details" asp-route-id="@eventDetails.Id">View</a>
                     </td>

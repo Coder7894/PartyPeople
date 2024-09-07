@@ -52,7 +52,7 @@ public class EmployeeEventRepository : RepositoryBase
     {
         var command = new CommandDefinition(
             @"
-                SELECT  CAST(CASE
+                SELECT CAST(CASE
                      WHEN EXISTS (
                                      SELECT 1
                                         FROM   [EmployeeEvent] AS [EE]
@@ -77,6 +77,7 @@ public class EmployeeEventRepository : RepositoryBase
     /// Creates a new employee event association.
     /// </summary>
     /// <param name="employeeEvent">The employee event association to create.</param>
+    /// <param name="cancellationToken">A token which can be used to cancel asynchronous operations.</param>
     /// <returns>An awaitable task that results in the created employee, with its Id.</returns>
     public async Task<EmployeeEvent> CreateAsync(EmployeeEvent employeeEvent, CancellationToken cancellationToken = default)
     {
@@ -122,8 +123,8 @@ public class EmployeeEventRepository : RepositoryBase
         var command = new CommandDefinition(
             @"
                 DELETE FROM [EmployeeEvent]
-                WHERE [EmployeeId] = @EmployeeId
-                  AND [EventId] = @EventId;
+                WHERE       [EmployeeId] = @EmployeeId
+                  AND       [EventId] = @EventId;
             ",
             parameters: new
             {
@@ -137,7 +138,7 @@ public class EmployeeEventRepository : RepositoryBase
     }
 
     /// <summary>
-    /// Gets the coun of employees attending each event.
+    /// Gets the count of employees attending each event.
     /// <param name="eventIds">The IDs of the events to get the count of employees for.</param>
     /// <param name="cancellationToken">A token which can be used to cancel asynchronous operations.</param>
     /// <returns>An awaitable task whose result is a dictionary of event IDs with their employee count.</returns>
@@ -146,10 +147,10 @@ public class EmployeeEventRepository : RepositoryBase
     {
         var command = new CommandDefinition(
             @"
-                SELECT [E].[EventId],
-                       COUNT([E].[EmployeeId]) AS [EmployeeCount]
-                FROM [EmployeeEvent] AS [E]
-                WHERE [E].[EventId] IN @EventIds
+                SELECT   [E].[EventId],
+                         COUNT([E].[EmployeeId]) AS [EmployeeCount]
+                FROM     [EmployeeEvent] AS [E]
+                WHERE    [E].[EventId] IN @EventIds
                 GROUP BY [E].[EventId];
             ",
             parameters: new
@@ -165,7 +166,6 @@ public class EmployeeEventRepository : RepositoryBase
         return eventEmployeeCounts.ToDictionary(x => x.EventId, x => x.EmployeeCount);
     }
 
-    // Next is getting the actual employees at an event
     /// <summary>
     /// Gets the employees attending an event.
     /// </summary>
@@ -193,6 +193,7 @@ public class EmployeeEventRepository : RepositoryBase
             cancellationToken: cancellationToken);
 
         var employees = await Connection.QueryAsync<Employee>(command);
+
         return employees
             .OrderBy(x => x.LastName)
             .ToArray();
