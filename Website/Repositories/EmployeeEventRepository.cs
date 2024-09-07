@@ -83,23 +83,23 @@ public class EmployeeEventRepository : RepositoryBase
     {
         var command = new CommandDefinition(
             @"
-            INSERT INTO [EmployeeEvent]
-            (
-                [EmployeeId],
-                [EventId]
-            )
-            VALUES
-            (
-                @EmployeeId,
-                @EventId
-            );
+                INSERT INTO [EmployeeEvent]
+                (
+                    [EmployeeId],
+                    [EventId]
+                )
+                VALUES
+                (
+                    @EmployeeId,
+                    @EventId
+                );
 
-            SELECT  [E].[EmployeeId],
-                    [E].[EventId]
-            FROM    [EmployeeEvent] AS [E]
-            WHERE   [E].[EmployeeId] = @EmployeeId
-              AND   [E].[EventId] = @EventId;
-        ",
+                SELECT  [E].[EmployeeId],
+                        [E].[EventId]
+                FROM    [EmployeeEvent] AS [E]
+                WHERE   [E].[EmployeeId] = @EmployeeId
+                  AND   [E].[EventId] = @EventId;
+            ",
             parameters: new
             {
                 employeeEvent.EmployeeId,
@@ -109,6 +109,34 @@ public class EmployeeEventRepository : RepositoryBase
             cancellationToken: cancellationToken);
         
         return await Connection.QuerySingleAsync<EmployeeEvent>(command);
+    }
+
+    /// <summary>
+    /// Creates multiple employee event associations at once.
+    /// </summary>
+    /// <param name="employeeEvents">The employee event associations to create.</param>
+    /// <param name="cancellationToken">A token which can be used to cancel asynchronous operations.</param>
+    /// <returns>An awaitable task.</returns>
+    public async Task CreateManyAsync(IEnumerable<EmployeeEvent> employeeEvents, CancellationToken cancellationToken = default)
+    {
+        var command = new CommandDefinition(
+        @"
+            INSERT INTO [EmployeeEvent]
+            (
+                [EmployeeId],
+                [EventId]
+            )
+            VALUES
+            (
+                @EmployeeId,
+                @EventId
+            )
+        ",
+            parameters: employeeEvents,
+            commandType: CommandType.Text,
+            cancellationToken: cancellationToken);
+
+        await Connection.ExecuteAsync(command);
     }
 
     /// <summary>
@@ -138,32 +166,26 @@ public class EmployeeEventRepository : RepositoryBase
     }
 
     /// <summary>
-    /// Gets the count of employees attending each event.
-    /// <param name="eventIds">The IDs of the events to get the count of employees for.</param>
-    /// <param name="cancellationToken">A token which can be used to cancel asynchronous operations.</param>
-    /// <returns>An awaitable task whose result is a dictionary of event IDs with their employee count.</returns>
+    /// Deletes multiple existing employee event associations at once.
     /// </summary>
-    public async Task<Dictionary<int, int>> GetEmployeesAtEventCountAsync(IEnumerable<int> eventIds, CancellationToken cancellationToken = default)
+    /// <param name="employeeIds">The IDs of the employees.</param>
+    /// <param name="cancellationToken">A token which can be used to cancel asynchronous operations.</param>
+    /// <returns>An awaitable task.</returns>
+    public async Task DeleteManyAsync(IEnumerable<int> employeeIds, CancellationToken cancellationToken = default)
     {
         var command = new CommandDefinition(
             @"
-                SELECT   [E].[EventId],
-                         COUNT([E].[EmployeeId]) AS [EmployeeCount]
-                FROM     [EmployeeEvent] AS [E]
-                WHERE    [E].[EventId] IN @EventIds
-                GROUP BY [E].[EventId];
+                DELETE FROM [EmployeeEvent]
+                WHERE       [EmployeeId] IN @EmployeeIds;
             ",
             parameters: new
             {
-                EventIds = eventIds
+                EmployeeIds = employeeIds
             },
             commandType: CommandType.Text,
             cancellationToken: cancellationToken);
 
-        var eventEmployeeCounts = await Connection.QueryAsync<(int EventId, int EmployeeCount)>(command);
-
-        // Convert the result to a dictionary
-        return eventEmployeeCounts.ToDictionary(x => x.EventId, x => x.EmployeeCount);
+        await Connection.ExecuteAsync(command);
     }
 
     /// <summary>
@@ -196,6 +218,68 @@ public class EmployeeEventRepository : RepositoryBase
 
         return employees
             .OrderBy(x => x.LastName)
+            .ToArray();
+    }
+
+    /// <summary>
+    /// Gets the count of employees attending each event.
+    /// <param name="eventIds">The IDs of the events to get the count of employees for.</param>
+    /// <param name="cancellationToken">A token which can be used to cancel asynchronous operations.</param>
+    /// <returns>An awaitable task whose result is a dictionary of event IDs with their employee count.</returns>
+    /// </summary>
+    public async Task<Dictionary<int, int>> GetEmployeesAtEventCountAsync(IEnumerable<int> eventIds, CancellationToken cancellationToken = default)
+    {
+        var command = new CommandDefinition(
+            @"
+                SELECT   [E].[EventId],
+                         COUNT([E].[EmployeeId]) AS [EmployeeCount]
+                FROM     [EmployeeEvent] AS [E]
+                WHERE    [E].[EventId] IN @EventIds
+                GROUP BY [E].[EventId];
+            ",
+            parameters: new
+            {
+                EventIds = eventIds
+            },
+            commandType: CommandType.Text,
+            cancellationToken: cancellationToken);
+
+        var eventEmployeeCounts = await Connection.QueryAsync<(int EventId, int EmployeeCount)>(command);
+
+        return eventEmployeeCounts.ToDictionary(x => x.EventId, x => x.EmployeeCount);
+    }
+
+    /// <summary>
+    /// Get the events an employee is attending.
+    /// </summary>
+    /// <param name="employeeId">The ID of the employee to get the events for.</param>
+    /// <param name="cancellationToken">A token which can be used to cancel asynchronous operations.</param>
+    /// <returns>An awaitable task whose result is the events the employee is attending.</returns>
+    public async Task<IReadOnlyCollection<Event>> GetEventsForEmployeeAsync(int employeeId, CancellationToken cancellationToken = default)
+    {
+        var command = new CommandDefinition(
+            @"
+                SELECT  [E].[Id],
+                        [E].[Description],
+                        [E].[StartDateTime],
+                        [E].[EndDateTime],
+                        [E].[MaximumCapacity]
+                FROM    [Event] AS [E]
+                JOIN    [EmployeeEvent] AS [EE]
+                ON      [E].[Id] = [EE].[EventId]
+                WHERE   [EE].[EmployeeId] = @EmployeeId;
+            ",
+            parameters: new
+            {
+                EmployeeId = employeeId
+            },
+            commandType: CommandType.Text,
+            cancellationToken: cancellationToken);
+
+        var events = await Connection.QueryAsync<Event>(command);
+
+        return events
+            .OrderBy(x => x.StartDateTime)
             .ToArray();
     }
 }

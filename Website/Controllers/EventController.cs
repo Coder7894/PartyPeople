@@ -71,23 +71,46 @@ namespace Website.Controllers
                 return NotFound();
 
             var @event = await _dbContext.Events.GetByIdAsync(id, cancellationToken);
-            return View(@event);
+            var employees = await _dbContext.Employees.GetAllAsync(cancellationToken);
+            var employeeEvent = await _dbContext.EmployeeEvent.GetEmployeesAtEventAsync(id, cancellationToken);
+
+            var employeeAttendance = employees.ToDictionary(
+                employee => employee.Id,
+                employee => employeeEvent.Any(e => e.Id== employee.Id)
+            );
+
+            return View(new EventEditViewModel { Event = @event, Employees = employees, EmployeeAttendance = employeeAttendance });
         }
 
         // POST: Event/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit(int id, Event @event, CancellationToken cancellationToken)
+        public async Task<ActionResult> Edit(int id, EventEditViewModel eventEdits, CancellationToken cancellationToken)
         {
-            var validationResult = await _validator.ValidateAsync(@event, cancellationToken);
+            var validationResult = await _validator.ValidateAsync(eventEdits.Event, cancellationToken);
 
             if (!validationResult.IsValid)
             {
                 validationResult.AddToModelState(ModelState);
-                return View(@event);
+                return View(eventEdits.Event);
             }
 
-            var updatedEvent = await _dbContext.Events.UpdateAsync(@event, cancellationToken);
+            var updatedEvent = await _dbContext.Events.UpdateAsync(eventEdits.Event, cancellationToken);
+
+            var currentEmployeeAttending = await _dbContext.EmployeeEvent.GetEmployeesAtEventAsync(id, cancellationToken);
+            var employeeIdsToRemove = currentEmployeeAttending
+                .Where(e => !eventEdits.EmployeeAttendance[e.Id] || !eventEdits.EmployeeAttendance.ContainsKey(e.Id))
+                .Select(e => e.Id)
+                .ToArray();
+
+            await _dbContext.EmployeeEvent.DeleteManyAsync(employeeIdsToRemove, cancellationToken);
+
+            var employeeEventsToAdd = eventEdits.EmployeeAttendance
+                .Where(ep => ep.Value && !currentEmployeeAttending.Any(e => e.Id == ep.Key))
+                .Select(ep => new EmployeeEvent { EmployeeId = ep.Key, EventId = updatedEvent.Id })
+                .ToArray();
+
+            await _dbContext.EmployeeEvent.CreateManyAsync(employeeEventsToAdd, cancellationToken);
 
             return RedirectToAction(nameof(Details), new { id = updatedEvent.Id });
         }
