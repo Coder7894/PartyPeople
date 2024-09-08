@@ -252,6 +252,9 @@ public class EmployeeRepository : RepositoryBase
                 FROM     [Employee] as [E]
                 JOIN     [EmployeeEvent] AS [EE]
                 ON       [E].[Id] = [EE].[EmployeeId]
+                JOIN     [Event] AS [EV]
+                ON       [EE].[EventId] = [EV].[Id]
+                WHERE    [EV].[EndDateTime] < DATETIME('now')
                 GROUP BY [E].[Id]
                 ORDER BY [EventsAttended] DESC
                 LIMIT    @Limit;
