@@ -94,11 +94,11 @@ public class EmployeeEventRepository : RepositoryBase
                     @EventId
                 );
 
-                SELECT  [E].[EmployeeId],
-                        [E].[EventId]
-                FROM    [EmployeeEvent] AS [E]
-                WHERE   [E].[EmployeeId] = @EmployeeId
-                  AND   [E].[EventId] = @EventId;
+                SELECT  [EE].[EmployeeId],
+                        [EE].[EventId]
+                FROM    [EmployeeEvent] AS [EE]
+                WHERE   [EE].[EmployeeId] = @EmployeeId
+                  AND   [EE].[EventId] = @EventId;
             ",
             parameters: new
             {
@@ -176,7 +176,7 @@ public class EmployeeEventRepository : RepositoryBase
         var command = new CommandDefinition(
             @"
                 DELETE FROM [EmployeeEvent]
-                WHERE      [EmployeeId] IN @EmployeeIds
+                WHERE       [EmployeeId] IN @EmployeeIds
                   AND       [EventId] = @EventId;
             ",
             parameters: new
@@ -233,11 +233,11 @@ public class EmployeeEventRepository : RepositoryBase
     {
         var command = new CommandDefinition(
             @"
-                SELECT   [E].[EventId],
-                         COUNT([E].[EmployeeId]) AS [EmployeeCount]
-                FROM     [EmployeeEvent] AS [E]
-                WHERE    [E].[EventId] IN @EventIds
-                GROUP BY [E].[EventId];
+                SELECT   [EE].[EventId],
+                         COUNT([EE].[EmployeeId]) AS [EmployeeCount]
+                FROM     [EmployeeEvent] AS [EE]
+                WHERE    [EE].[EventId] IN @EventIds
+                GROUP BY [EE].[EventId];
             ",
             parameters: new
             {
