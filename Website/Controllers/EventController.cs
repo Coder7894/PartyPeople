@@ -95,7 +95,7 @@ namespace Website.Controllers
 
             if (!validationResult.IsValid)
             {
-                validationResult.AddToModelState(ModelState);
+                validationResult.AddToModelState(ModelState, "Event");
                 eventEdits.Employees = await _dbContext.Employees.GetAllAsync(cancellationToken);
                 return View(eventEdits);
             }
