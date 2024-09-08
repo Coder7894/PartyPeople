@@ -96,11 +96,20 @@ namespace Website.Controllers
             if (!validationResult.IsValid)
             {
                 validationResult.AddToModelState(ModelState);
+                eventEdits.Employees = await _dbContext.Employees.GetAllAsync(cancellationToken);
                 return View(eventEdits);
             }
 
             // Update the event
             var updatedEvent = await _dbContext.Events.UpdateAsync(eventEdits.Event, cancellationToken);
+
+            // Prevent more possible attendees than the maximum capacity
+            if (eventEdits.EmployeeAttendance.Count(e => e.Value) > updatedEvent.MaximumCapacity)
+            {
+                ModelState.AddModelError("Event.MaximumCapacity", "The number of attendees exceeds the maximum capacity provided.");
+                eventEdits.Employees = await _dbContext.Employees.GetAllAsync(cancellationToken);
+                return View(eventEdits);
+            }
 
             // Delete associations for employees that are no longer attending
             var currentEmployeeAttending = await _dbContext.EmployeeEvent.GetEmployeesAtEventAsync(id, cancellationToken);
