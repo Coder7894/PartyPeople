@@ -171,16 +171,18 @@ public class EmployeeEventRepository : RepositoryBase
     /// <param name="employeeIds">The IDs of the employees.</param>
     /// <param name="cancellationToken">A token which can be used to cancel asynchronous operations.</param>
     /// <returns>An awaitable task.</returns>
-    public async Task DeleteManyAsync(IEnumerable<int> employeeIds, CancellationToken cancellationToken = default)
+    public async Task DeleteManyAsync(IEnumerable<int> employeeIds, int eventId, CancellationToken cancellationToken = default)
     {
         var command = new CommandDefinition(
             @"
                 DELETE FROM [EmployeeEvent]
-                WHERE       [EmployeeId] IN @EmployeeIds;
+                WHERE      [EmployeeId] IN @EmployeeIds
+                  AND       [EventId] = @EventId;
             ",
             parameters: new
             {
-                EmployeeIds = employeeIds
+                EmployeeIds = employeeIds,
+                EventId = eventId
             },
             commandType: CommandType.Text,
             cancellationToken: cancellationToken);

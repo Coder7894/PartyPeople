@@ -118,7 +118,7 @@ namespace Website.Controllers
                 .Select(e => e.Id)
                 .ToArray();
 
-            await _dbContext.EmployeeEvent.DeleteManyAsync(employeeIdsToRemove, cancellationToken);
+            await _dbContext.EmployeeEvent.DeleteManyAsync(employeeIdsToRemove, updatedEvent.Id, cancellationToken);
 
             // Add associations for employees that are now attending
             if (eventEdits.EmployeeAttendance != null)
