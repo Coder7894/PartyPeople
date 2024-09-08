@@ -71,6 +71,9 @@ namespace Website.Controllers
                 return NotFound();
 
             var @event = await _dbContext.Events.GetByIdAsync(id, cancellationToken);
+            if (@event?.StartDateTime < DateTime.Now)
+                return RedirectToAction(nameof(Details), new { id });
+
             var employees = await _dbContext.Employees.GetAllAsync(cancellationToken);
             var employeeEvent = await _dbContext.EmployeeEvent.GetEmployeesAtEventAsync(id, cancellationToken);
 
@@ -87,16 +90,19 @@ namespace Website.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(int id, EventEditViewModel eventEdits, CancellationToken cancellationToken)
         {
+            // Note: Could use dto?
             var validationResult = await _validator.ValidateAsync(eventEdits.Event, cancellationToken);
 
             if (!validationResult.IsValid)
             {
                 validationResult.AddToModelState(ModelState);
-                return View(eventEdits.Event);
+                return View(eventEdits);
             }
 
+            // Update the event
             var updatedEvent = await _dbContext.Events.UpdateAsync(eventEdits.Event, cancellationToken);
 
+            // Delete associations for employees that are no longer attending
             var currentEmployeeAttending = await _dbContext.EmployeeEvent.GetEmployeesAtEventAsync(id, cancellationToken);
             var employeeIdsToRemove = currentEmployeeAttending
                 .Where(e => !eventEdits.EmployeeAttendance[e.Id] || !eventEdits.EmployeeAttendance.ContainsKey(e.Id))
@@ -105,12 +111,16 @@ namespace Website.Controllers
 
             await _dbContext.EmployeeEvent.DeleteManyAsync(employeeIdsToRemove, cancellationToken);
 
-            var employeeEventsToAdd = eventEdits.EmployeeAttendance
-                .Where(ep => ep.Value && !currentEmployeeAttending.Any(e => e.Id == ep.Key))
-                .Select(ep => new EmployeeEvent { EmployeeId = ep.Key, EventId = updatedEvent.Id })
-                .ToArray();
+            // Add associations for employees that are now attending
+            if (eventEdits.EmployeeAttendance != null)
+            {
+                var employeeEventsToAdd = eventEdits.EmployeeAttendance
+                    .Where(ep => ep.Value && !currentEmployeeAttending.Any(e => e.Id == ep.Key))
+                    .Select(ep => new EmployeeEvent { EmployeeId = ep.Key, EventId = updatedEvent.Id })
+                    .ToArray();
 
-            await _dbContext.EmployeeEvent.CreateManyAsync(employeeEventsToAdd, cancellationToken);
+                await _dbContext.EmployeeEvent.CreateManyAsync(employeeEventsToAdd, cancellationToken);
+            }
 
             return RedirectToAction(nameof(Details), new { id = updatedEvent.Id });
         }

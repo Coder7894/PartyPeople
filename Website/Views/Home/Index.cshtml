@@ -90,19 +90,19 @@
         <tbody>
             @foreach (var employeeCountPair in Model.EmployeesWithEventCount)
             {
-                    <tr>
-                        <td>@employeeCountPair.Item1.FirstName @employeeCountPair.Item1.LastName</td>
-                        <td>@employeeCountPair.Item2.ToString()</td>
-                        <td class="text-end py-1">
-                            <a class="btn btn-outline-primary btn-sm" role="button" asp-controller="Employee" asp-action="Details" asp-route-id="@employeeCountPair.Item1.Id">View</a>
-                        </td>
-                    </tr>
+                <tr>
+                    <td>@employeeCountPair.Item1.FirstName @employeeCountPair.Item1.LastName</td>
+                    <td>@employeeCountPair.Item2.ToString()</td>
+                    <td class="text-end py-1">
+                        <a class="btn btn-outline-primary btn-sm" role="button" asp-controller="Employee" asp-action="Details" asp-route-id="@employeeCountPair.Item1.Id">View</a>
+                    </td>
+                </tr>
             }
             @if (!Model.EmployeesWithEventCount.Any())
             {
-                    <tr>
-                        <td colspan="4">No employees have attended any events.</td>
-                    </tr>
+                <tr>
+                    <td colspan="4">No employees have attended any events.</td>
+                </tr>
             }
         </tbody>
     </table>

@@ -7,7 +7,10 @@
 <div class="d-flex align-items-center mb-2">
     <h4 class="me-auto mb-0">Event Details</h4>
     <a class="btn btn-outline-primary btn-sm m-1" role="button" asp-controller="Event" asp-action="Index">Back</a>
-    <a class="btn btn-warning btn-sm m-1" role="button" asp-controller="Event" asp-action="Edit" asp-route-id="@Model.Event.Id">Edit</a>
+	@if (Model.Event.StartDateTime > DateTime.Now)
+	{
+		<a class="btn btn-warning btn-sm m-1" role="button" asp-controller="Event" asp-action="Edit" asp-route-id="@Model.Event.Id">Edit</a>
+	}
     <a class="btn btn-danger btn-sm m-1" role="button" data-bs-toggle="modal" data-bs-target="#confirmDelete">Delete</a>
 </div>
 

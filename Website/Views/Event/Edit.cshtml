@@ -68,7 +68,7 @@
             <div class="card mb-3 user-select-none">
                 <div class="card-header">Employees Attending</div>
                 <div class="card-body">
-                    @if (Model.Employees.Any())
+                    @if (Model.Employees?.Count > 0)
 					{
                         @foreach (var employee in Model.Employees)
                         {
