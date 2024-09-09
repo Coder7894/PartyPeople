@@ -204,7 +204,8 @@ public class EmployeeEventRepository : RepositoryBase
                 SELECT  [E].[Id],
                         [E].[FirstName],
                         [E].[LastName],
-                        [E].[DateOfBirth]
+                        [E].[DateOfBirth],
+                        [E].[FavouriteDrink]
                 FROM    [Employee] AS [E]
                 JOIN    [EmployeeEvent] AS [EE]
                 ON      [E].[Id] = [EE].[EmployeeId]

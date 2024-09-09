@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Event Details";
+    var favouriteDrinks = Model.Employees.Select(e => e.FavouriteDrink).Where(d => d != null).Distinct();
 }
 
 <div class="d-flex align-items-center mb-2">
@@ -76,6 +77,24 @@
                 }
             </div>
         </div>
+        
+        @if (Model.Employees.Any())
+        {
+            <div class="row mb-3 g-2 align-items-center">
+                <div class="col-sm-2">
+                    <span>Favourite Drinks:</span>
+                </div>
+                <div class="col-sm-3">
+                    <ul>
+                        @foreach (var drink in favouriteDrinks)
+					    {
+						    <li>@drink</li>
+					    }
+                    </ul>
+                </div>
+            </div>
+        }
+
     </div>
 </div>
 
