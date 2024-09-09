@@ -169,6 +169,7 @@ public class EmployeeEventRepository : RepositoryBase
     /// Deletes multiple existing employee event associations at once.
     /// </summary>
     /// <param name="employeeIds">The IDs of the employees.</param>
+    /// <param name="eventId">The ID of the event.</param>
     /// <param name="cancellationToken">A token which can be used to cancel asynchronous operations.</param>
     /// <returns>An awaitable task.</returns>
     public async Task DeleteManyAsync(IEnumerable<int> employeeIds, int eventId, CancellationToken cancellationToken = default)
