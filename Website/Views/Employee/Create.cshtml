@@ -50,6 +50,18 @@
                     <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                 </div>
             </div>
+
+            <div class="row mb-3 g-3 align-items-center">
+                <div class="col-sm-2">
+                    <label asp-for="FavouriteDrink" class="col-form-label"></label>
+                </div>
+                <div class="col-sm-3">
+                    <input asp-for="FavouriteDrink" class="form-control" placeholder="Optional" />
+                </div>
+                <div class="col-auto">
+                    <span asp-validation-for="FavouriteDrink" class="text-danger"></span>
+                </div>
+            </div>
         </div>
     </div>
 </form>

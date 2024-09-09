@@ -30,5 +30,8 @@ public class EmployeeValidator : AbstractValidator<Employee>
         RuleFor(x => x.DateOfBirth)
             .LessThan(DateOnly.FromDateTime(DateTime.Now))
             .WithMessage($"The Date of Birth must be less than '{DateOnly.FromDateTime(DateTime.Now):dd/MM/yyyy}'.");
+
+        RuleFor(x => x.FavouriteDrink)
+            .MaximumLength(255);
     }
 }

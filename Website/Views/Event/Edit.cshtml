@@ -1,4 +1,4 @@
-﻿@model Event;
+﻿@model EventEditViewModel;
 
 @{
     ViewData["Title"] = "Update Event";
@@ -15,53 +15,76 @@
         <div class="card-body">
             <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-            <input asp-for="Id" type="hidden" />
+            <input asp-for="Event.Id" type="hidden" />
 
             <div class="row mb-3 g-3 align-items-center">
                 <div class="col-sm-2">
-                    <label asp-for="Description" class="col-form-label"></label>
+                    <label asp-for="Event.Description" class="col-form-label"></label>
                 </div>
                 <div class="col-sm-3">
-                    <input asp-for="Description" class="form-control" />
+                    <input asp-for="Event.Description" class="form-control" />
                 </div>
                 <div class="col-auto">
-                    <span asp-validation-for="Description" class="text-danger"></span>
+                    <span asp-validation-for="Event.Description" class="text-danger"></span>
                 </div>
             </div>
 
             <div class="row mb-3 g-3 align-items-center">
                 <div class="col-sm-2">
-                    <label asp-for="StartDateTime" class="col-form-label"></label>
+                    <label asp-for="Event.StartDateTime" class="col-form-label"></label>
                 </div>
                 <div class="col-sm-3">
-                    <input asp-for="StartDateTime" class="form-control" />
+                    <input asp-for="Event.StartDateTime" class="form-control" />
                 </div>
                 <div class="col-auto">
-                    <span asp-validation-for="StartDateTime" class="text-danger"></span>
+                    <span asp-validation-for="Event.StartDateTime" class="text-danger"></span>
                 </div>
             </div>
 
             <div class="row mb-3 g-3 align-items-center">
                 <div class="col-sm-2">
-                    <label asp-for="EndDateTime" class="col-form-label"></label>
+                    <label asp-for="Event.EndDateTime" class="col-form-label"></label>
                 </div>
                 <div class="col-sm-3">
-                    <input asp-for="EndDateTime" class="form-control" />
+                    <input asp-for="Event.EndDateTime" class="form-control" />
                 </div>
                 <div class="col-auto">
-                    <span asp-validation-for="EndDateTime" class="text-danger"></span>
+                    <span asp-validation-for="Event.EndDateTime" class="text-danger"></span>
                 </div>
             </div>
 
             <div class="row mb-3 g-3 align-items-center">
                 <div class="col-sm-2">
-                    <label asp-for="MaximumCapacity" class="col-form-label"></label>
+                    <label asp-for="Event.MaximumCapacity" class="col-form-label"></label>
                 </div>
                 <div class="col-sm-3">
-                    <input asp-for="MaximumCapacity" class="form-control" />
+                    <input asp-for="Event.MaximumCapacity" class="form-control" placeholder="Optional" />
                 </div>
                 <div class="col-auto">
-                    <span asp-validation-for="MaximumCapacity" class="text-danger"></span>
+                    <span asp-validation-for="Event.MaximumCapacity" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="card mb-3 user-select-none">
+                <div class="card-header">Employees Attending</div>
+                <div class="card-body">
+                    @if (Model.Employees?.Count > 0)
+					{
+                        @foreach (var employee in Model.Employees)
+                        {
+                            <div class="form-check">
+                                <input
+                                    type="checkbox" 
+                                    asp-for="@Model.EmployeeAttendance[@employee.Id]"
+                                    value="@true"/>
+                                <label asp-for="@Model.EmployeeAttendance[@employee.Id]">@employee.FirstName @employee.LastName</label>
+                            </div>
+                        }
+					}
+					else
+					{
+						<span>No employees Available</span>
+					}
                 </div>
             </div>
 

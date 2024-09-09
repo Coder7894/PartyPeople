@@ -31,7 +31,8 @@ public class EmployeeRepository : RepositoryBase
                     [Id] integer primary key,
                     [FirstName] nvarchar(2147483647) NOT NULL COLLATE NOCASE,
                     [LastName] nvarchar(2147483647) NOT NULL COLLATE NOCASE,
-                    [DateOfBirth] date NOT NULL
+                    [DateOfBirth] date NOT NULL,
+                    [FavouriteDrink] nvarchar(2147483647) NULL COLLATE NOCASE
                 );
             ",
             commandType: CommandType.Text,
@@ -52,7 +53,8 @@ public class EmployeeRepository : RepositoryBase
                 SELECT  [Id],
                         [FirstName],
                         [LastName],
-                        [DateOfBirth]
+                        [DateOfBirth],
+                        [FavouriteDrink]
                 FROM    [Employee] AS [E];
             ",
             commandType: CommandType.Text,
@@ -78,7 +80,8 @@ public class EmployeeRepository : RepositoryBase
                 SELECT  [E].[Id],
                         [E].[FirstName],
                         [E].[LastName],
-                        [E].[DateOfBirth]
+                        [E].[DateOfBirth],
+                        [E].[FavouriteDrink]
                 FROM    [Employee] AS [E]
                 WHERE   [E].[Id] = @Id;
             ",
@@ -134,19 +137,22 @@ public class EmployeeRepository : RepositoryBase
                 (
                     [FirstName],
                     [LastName],
-                    [DateOfBirth]
+                    [DateOfBirth],
+                    [FavouriteDrink]
                 )
                 VALUES
                 (
                     @FirstName,
                     @LastName,
-                    @DateOfBirth
+                    @DateOfBirth,
+                    @FavouriteDrink
                 );
 
                 SELECT  [E].[Id],
                         [E].[FirstName],
                         [E].[LastName],
-                        [E].[DateOfBirth]
+                        [E].[DateOfBirth],
+                        [E].[FavouriteDrink]
                 FROM    [Employee] AS [E]
                 WHERE   [E].[Id] = last_insert_rowid();
             ",
@@ -154,7 +160,8 @@ public class EmployeeRepository : RepositoryBase
             {
                 employee.FirstName,
                 employee.LastName,
-                employee.DateOfBirth
+                employee.DateOfBirth,
+                employee.FavouriteDrink
             },
             commandType: CommandType.Text,
             cancellationToken: cancellationToken);
@@ -176,13 +183,15 @@ public class EmployeeRepository : RepositoryBase
                 UPDATE  [Employee]
                 SET     [FirstName] = @FirstName,
                         [LastName] = @LastName,
-                        [DateOfBirth] = @DateOfBirth
+                        [DateOfBirth] = @DateOfBirth,
+                        [FavouriteDrink] = @FavouriteDrink
                 WHERE   [Id] = @Id;
 
                 SELECT  [E].[Id],
                         [E].[FirstName],
                         [E].[LastName],
-                        [E].[DateOfBirth]
+                        [E].[DateOfBirth],
+                        [E].[FavouriteDrink]
                 FROM    [Employee] AS [E]
                 WHERE   [E].[Id] = @Id;
             ",
@@ -191,7 +200,8 @@ public class EmployeeRepository : RepositoryBase
                 employee.Id,
                 employee.FirstName,
                 employee.LastName,
-                employee.DateOfBirth
+                employee.DateOfBirth,
+                employee.FavouriteDrink
             },
             commandType: CommandType.Text,
             cancellationToken: cancellationToken);
@@ -221,5 +231,48 @@ public class EmployeeRepository : RepositoryBase
             cancellationToken: cancellationToken);
 
         await Connection.ExecuteAsync(command);
+    }
+
+    /// <summary>
+    /// Gets the employees with the most events attended.
+    /// </summary>
+    /// <param name="limit">The number of employees to get.</param>
+    /// <param name="cancellationToken">A token which can be used to cancel asynchronous operations.</param>
+    /// <returns>An awaitable task whose result is the employees found.</returns>
+    public async Task<IReadOnlyCollection<(Employee, long)>> GetTopEmployeesByEventsAttendedAsync(int limit, CancellationToken cancellationToken = default)
+    {
+        var command = new CommandDefinition(
+            @"
+                SELECT   [E].[Id],
+		                 [E].[FirstName],
+		                 [E].[LastName],
+		                 [E].[DateOfBirth],
+		                 [E].[FavouriteDrink],
+		                 COUNT([EE].[EventId]) AS [EventsAttended]
+                FROM     [Employee] as [E]
+                JOIN     [EmployeeEvent] AS [EE]
+                ON       [E].[Id] = [EE].[EmployeeId]
+                JOIN     [Event] AS [EV]
+                ON       [EE].[EventId] = [EV].[Id]
+                WHERE    [EV].[EndDateTime] < DATETIME('now')
+                GROUP BY [E].[Id]
+                ORDER BY [EventsAttended] DESC
+                LIMIT    @Limit;
+            ",
+            parameters: new
+            {
+                Limit = limit
+            },
+            commandType: CommandType.Text,
+            cancellationToken: cancellationToken);
+
+        var employeesWithEventCount = await Connection.QueryAsync<Employee, long, (Employee, long)>(
+            command,
+            (employee, eventsAttended) => (employee, eventsAttended),
+            splitOn: "EventsAttended"
+        );
+
+        return employeesWithEventCount
+            .ToList();
     }
 }

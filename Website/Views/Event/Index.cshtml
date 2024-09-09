@@ -15,6 +15,7 @@
                 <th scope="col">Description</th>
                 <th scope="col">Event Start</th>
                 <th scope="col">Event Finish</th>
+                <th scope="col">Participants</th>
                 <th scope="col" class="col-sm-2 text-end">
                     @if (!Model.IsShowingHistoricEvents)
                     {
@@ -34,6 +35,7 @@
                     <td>@eventDetails.Description</td>
                     <td>@eventDetails.StartDateTime.ToString("dd/MM/yyyy HH:mm")</td>
                     <td>@eventDetails.EndDateTime.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@Model.EventEmployeeCounts.GetValueOrDefault(eventDetails.Id, 0)</td>
                     <td class="text-end py-1">
                         <a class="btn btn-outline-primary btn-sm" role="button" asp-controller="Event" asp-action="Details" asp-route-id="@eventDetails.Id">View</a>
                     </td>
@@ -42,7 +44,7 @@
             @if (!Model.Events.Any())
             {
                 <tr>
-                    <td colspan="4">No events.</td>
+                    <td colspan="5">No events.</td>
                 </tr>
             }
         </tbody>
