@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
+using Website.DTOs;
 using Website.Models;
 using Website.Persistence;
 
@@ -20,11 +21,12 @@ namespace Website.Controllers
         }
 
         // GET: Employee
-        public async Task<ActionResult> Index(CancellationToken cancellationToken)
+        public async Task<ActionResult> Index( CancellationToken cancellationToken)
         {
-            var employees = await _dbContext.Employees.GetAllAsync(cancellationToken);
+            var employees = await _dbContext.Employees.GetAllAsync( cancellationToken);
             return View(new EmployeeListViewModel { Employees = employees });
         }
+
 
         // GET: Employee/Details/5
         public async Task<ActionResult> Details(int id, CancellationToken cancellationToken)
@@ -34,6 +36,8 @@ namespace Website.Controllers
                 return NotFound();
 
             var employee = await _dbContext.Employees.GetByIdAsync(id, cancellationToken);
+            var events = await _dbContext.EmployeeEvents.GetAllAsync(employeeId: id, cancellationToken: cancellationToken);
+            employee.Events = events.ToList();
             return View(employee);
         }
 

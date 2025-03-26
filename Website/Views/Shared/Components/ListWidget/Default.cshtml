@@ -1,0 +1,15 @@
+﻿@{
+    var apiUrl = ViewData["ApiUrl"] as string;
+    var title = ViewData["Title"] as string;
+    var redirectUrl = ViewData["RedirectUrl"] as string;
+}
+
+<div class="card p-2">
+    <strong>@title</strong>
+    <ul class="list-widget" data-api-url="@apiUrl" data-redirect-url="@redirectUrl">
+        <li>Loading items...</li>
+    </ul>
+</div>
+
+
+

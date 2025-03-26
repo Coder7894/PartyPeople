@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
+using Website.DTOs;
 
 namespace Website.Models;
 
@@ -37,4 +39,13 @@ public class Event
     /// </remarks>
     [DisplayName("Maximum Capacity")]
     public int? MaximumCapacity { get; init; }
+
+    /// <summary>
+    /// A list of employess attending this event
+    /// </summary>
+    [NotMapped]
+    public List<EmployeeEventDTO> Employees = new List<EmployeeEventDTO>();
+
+    [NotMapped]
+    public bool AtCapacity => Employees.Count >= MaximumCapacity;
 }

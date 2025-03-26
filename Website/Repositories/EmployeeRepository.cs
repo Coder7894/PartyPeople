@@ -31,8 +31,12 @@ public class EmployeeRepository : RepositoryBase
                     [Id] integer primary key,
                     [FirstName] nvarchar(2147483647) NOT NULL COLLATE NOCASE,
                     [LastName] nvarchar(2147483647) NOT NULL COLLATE NOCASE,
-                    [DateOfBirth] date NOT NULL
+                    [DateOfBirth] date NOT NULL,
+                    [FavouriteDrink] nvarchar(2147483647), 
+                    [FullName] AS (FirstName || ' ' || LastName) STORED
                 );
+
+                CREATE INDEX IF NOT EXISTS idx_Employee_FullName ON Employee(FullName);
             ",
             commandType: CommandType.Text,
             cancellationToken: cancellationToken);
@@ -41,19 +45,21 @@ public class EmployeeRepository : RepositoryBase
     }
 
     /// <summary>
-    /// Gets all employees.
+    /// Lists employees
     /// </summary>
+    /// <param name="searchTerm">A parameter to filter the employees on</param>
     /// <param name="cancellationToken">A token which can be used to cancel asynchronous operations.</param>
     /// <returns>An awaitable task whose result is the employees found.</returns>
-    public async Task<IReadOnlyCollection<Employee>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<Employee>> GetAllAsync( CancellationToken cancellationToken)
     {
         var command = new CommandDefinition(
             @"
                 SELECT  [Id],
                         [FirstName],
                         [LastName],
-                        [DateOfBirth]
-                FROM    [Employee] AS [E];
+                        [DateOfBirth],
+                        [FavouriteDrink]
+                FROM    [Employee] AS [E]
             ",
             commandType: CommandType.Text,
             cancellationToken: cancellationToken);
@@ -64,6 +70,8 @@ public class EmployeeRepository : RepositoryBase
             .OrderBy(x => x.LastName)
             .ToArray();
     }
+
+
 
     /// <summary>
     /// Gets an employee by ID.
@@ -78,7 +86,8 @@ public class EmployeeRepository : RepositoryBase
                 SELECT  [E].[Id],
                         [E].[FirstName],
                         [E].[LastName],
-                        [E].[DateOfBirth]
+                        [E].[DateOfBirth],
+                        [E].[FavouriteDrink]
                 FROM    [Employee] AS [E]
                 WHERE   [E].[Id] = @Id;
             ",
@@ -134,19 +143,22 @@ public class EmployeeRepository : RepositoryBase
                 (
                     [FirstName],
                     [LastName],
-                    [DateOfBirth]
+                    [DateOfBirth],
+                    [FavouriteDrink]
                 )
                 VALUES
                 (
                     @FirstName,
                     @LastName,
-                    @DateOfBirth
+                    @DateOfBirth,
+                    @FavouriteDrink
                 );
 
                 SELECT  [E].[Id],
                         [E].[FirstName],
                         [E].[LastName],
-                        [E].[DateOfBirth]
+                        [E].[DateOfBirth],
+                        [E].[FavouriteDrink]
                 FROM    [Employee] AS [E]
                 WHERE   [E].[Id] = last_insert_rowid();
             ",
@@ -154,7 +166,8 @@ public class EmployeeRepository : RepositoryBase
             {
                 employee.FirstName,
                 employee.LastName,
-                employee.DateOfBirth
+                employee.DateOfBirth,
+                employee.FavouriteDrink
             },
             commandType: CommandType.Text,
             cancellationToken: cancellationToken);
@@ -176,13 +189,15 @@ public class EmployeeRepository : RepositoryBase
                 UPDATE  [Employee]
                 SET     [FirstName] = @FirstName,
                         [LastName] = @LastName,
-                        [DateOfBirth] = @DateOfBirth
+                        [DateOfBirth] = @DateOfBirth,
+                        [FavouriteDrink] = @FavouriteDrink
                 WHERE   [Id] = @Id;
 
                 SELECT  [E].[Id],
                         [E].[FirstName],
                         [E].[LastName],
-                        [E].[DateOfBirth]
+                        [E].[DateOfBirth],
+                        [E].[FavouriteDrink]
                 FROM    [Employee] AS [E]
                 WHERE   [E].[Id] = @Id;
             ",
@@ -191,7 +206,8 @@ public class EmployeeRepository : RepositoryBase
                 employee.Id,
                 employee.FirstName,
                 employee.LastName,
-                employee.DateOfBirth
+                employee.DateOfBirth,
+                employee.FavouriteDrink
             },
             commandType: CommandType.Text,
             cancellationToken: cancellationToken);

@@ -34,6 +34,8 @@ public class EventRepository : RepositoryBase
                     [EndDateTime] datetime NOT NULL,
                     [MaximumCapacity] int NULL
                 );
+
+                CREATE INDEX IF NOT EXISTS idx_Event_StartDateTime ON Event(StartDateTime);
             ",
             commandType: CommandType.Text,
             cancellationToken: cancellationToken);
@@ -191,17 +193,20 @@ public class EventRepository : RepositoryBase
                 SET     [Description] = @Description,
                         [StartDateTime] = @StartDateTime,
                         [EndDateTime] = @EndDateTime,
-                        [MaximumCapacity] = @MaximumCapacity;
+                        [MaximumCapacity] = @MaximumCapacity
+                WHERE   [Id] = @Id;
 
                 SELECT  [E].[Id],
                         [E].[Description],
                         [E].[StartDateTime],
                         [E].[EndDateTime],
                         [E].[MaximumCapacity]
-                FROM    [Event] AS [E];
+                FROM    [Event] AS [E]
+                WHERE   [E].[Id] = @Id;
             ",
             parameters: new
             {
+                @event.Id,
                 @event.Description,
                 @event.StartDateTime,
                 @event.EndDateTime,
@@ -235,5 +240,15 @@ public class EventRepository : RepositoryBase
             cancellationToken: cancellationToken);
 
         await Connection.ExecuteAsync(command);
+    }
+
+    public async Task<bool> IsAtCapacityAsync(int eventId, CancellationToken cancellationToken = default)
+    {
+        var query = @"
+        SELECT COUNT(*) >= (SELECT MaximumCapacity FROM Event WHERE Id = @EventId)
+        FROM EmployeeEvent
+        WHERE EventId = @EventId";
+
+        return await Connection.ExecuteScalarAsync<bool>(new CommandDefinition(query, new { EventId = eventId }, cancellationToken: cancellationToken));
     }
 }

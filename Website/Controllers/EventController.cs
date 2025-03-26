@@ -3,6 +3,7 @@ using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using Website.Models;
 using Website.Persistence;
+using Website.Repositories;
 
 namespace Website.Controllers
 {
@@ -34,6 +35,8 @@ namespace Website.Controllers
                 return NotFound();
 
             var @event = await _dbContext.Events.GetByIdAsync(id, cancellationToken);
+            var employees = await _dbContext.EmployeeEvents.GetAllAsync(eventId: id, cancellationToken: cancellationToken);
+            @event.Employees = employees.ToList();
             return View(@event);
         }
 
@@ -81,6 +84,19 @@ namespace Website.Controllers
 
             if (!validationResult.IsValid)
             {
+                validationResult.AddToModelState(ModelState);
+                return View(@event);
+            }
+
+            var currentAttendees = await _dbContext.EmployeeEvents.GetAllAsync(eventId: id, null, cancellationToken);
+
+            if(currentAttendees.Count > @event.MaximumCapacity)
+            {
+                validationResult.Errors.Add(new FluentValidation.Results.ValidationFailure(
+                    "MaximumCapacity",
+                    "The event's maximum capacity cannot be less than the number of current attendees."
+                ));
+
                 validationResult.AddToModelState(ModelState);
                 return View(@event);
             }
